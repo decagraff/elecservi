@@ -1,31 +1,21 @@
 const express = require('express');
+const path = require('path'); // Asegúrate de importar el módulo 'path'
 const router = express.Router();
-const path = require('path'); // Importa el módulo 'path' para manejar rutas de archivos
 
-// Middleware para verificar si el usuario está autenticado
-const isAuthenticated = (req, res, next) => {
-    if (req.session.user) {
-        return next();
+// Ruta para el dashboard de administrador
+router.get('/admin', (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect('/dashboard/user');
     }
-    res.redirect('/login');
-};
-
-// Ruta del dashboard para administradores
-router.get('/admin', isAuthenticated, (req, res) => {
-    if (req.session.user.role === 'admin') {
-        res.sendFile(path.join(__dirname, '../views/dashboard-admin.html')); // Usa path.join para construir la ruta
-    } else {
-        res.status(403).send('Acceso denegado');
-    }
+    res.sendFile(path.join(__dirname, '../views/dashboard-admin.html')); // Corrige la ruta
 });
 
-// Ruta del dashboard para usuarios
-router.get('/user', isAuthenticated, (req, res) => {
-    if (req.session.user.role === 'user') {
-        res.sendFile(path.join(__dirname, '../views/dashboard-user.html')); // Usa path.join para construir la ruta
-    } else {
-        res.status(403).send('Acceso denegado');
+// Ruta para el dashboard de usuario
+router.get('/user', (req, res) => {
+    if (req.session.role !== 'user') {
+        return res.redirect('/dashboard/admin');
     }
+    res.sendFile(path.join(__dirname, '../views/dashboard-user.html')); // Corrige la ruta
 });
 
 module.exports = router;

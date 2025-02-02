@@ -1,23 +1,25 @@
 const express = require('express');
-const router = express.Router();
+const path = require('path'); // Asegúrate de importar el módulo 'path'
 const authController = require('../controllers/authController');
-const path = require('path'); // Importa el módulo 'path' para manejar rutas de archivos
+const router = express.Router();
 
-// Login
+// Ruta para mostrar el formulario de login
 router.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, '../views/login.html')); // Usa path.join para construir la ruta
+    res.sendFile(path.join(__dirname, '../views/login.html')); // Corrige la ruta
 });
 
+// Ruta para procesar el login
 router.post('/login', authController.login);
 
-// Register
+// Ruta para mostrar el formulario de registro
 router.get('/register', (req, res) => {
-    res.sendFile(path.join(__dirname, '../views/register.html')); // Usa path.join para construir la ruta
+    res.sendFile(path.join(__dirname, '../views/register.html')); // Corrige la ruta
 });
 
+// Ruta para procesar el registro
 router.post('/register', authController.register);
 
-// Logout
+// Ruta para cerrar sesión
 router.get('/logout', authController.logout);
 
 module.exports = router;

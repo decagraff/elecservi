@@ -6,14 +6,16 @@ const login = async (req, res) => {
     const user = await db.getUserByEmail(email);
 
     if (user && bcrypt.compareSync(password, user.password)) {
-        req.session.user = user;
+        req.session.user = user; // Guarda toda la información del usuario en la sesión
+        req.session.role = user.role; // Guarda el rol del usuario en la sesión
+
         if (user.role === 'admin') {
             res.redirect('/dashboard/admin');
         } else {
             res.redirect('/dashboard/user');
         }
     } else {
-        res.send('Invalid credentials');
+        res.send('Credenciales inválidas');
     }
 };
 
