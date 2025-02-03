@@ -1,0 +1,11 @@
+<div class="info-card">
+    <% clients.forEach(function(client) { %>
+        <div class="info-item">
+            <i class="fas fa-user-plus"></i>
+            <div>
+                <h4><%= client.name %></h4>
+                <p class="time-text">Hace <%= client.time %></p>
+            </div>
+        </div>
+    <% }); %>
+</div>

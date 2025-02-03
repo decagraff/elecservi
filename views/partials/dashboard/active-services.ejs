@@ -1,0 +1,18 @@
+<div class="service-list">
+    <% services.forEach(function(service) { %>
+        <div class="service-item">
+            <div class="service-icon">
+                <!-- Verifica que el ícono esté presente y sea válido -->
+                <i class="fas fa-<%= service.icon %>"></i>
+            </div>
+            <div class="service-details">
+                <h4><%= service.name %></h4>
+                <p>Progreso: <%= service.progress %>%</p>
+                <div class="progress-bar">
+                    <!-- Asegúrate de que progress sea un número y ajusta el estilo dinámicamente -->
+                    <div class="progress" style="width: <%= service.progress %>%;"></div>
+                </div>
+            </div>
+        </div>
+    <% }); %>
+</div>

@@ -1,0 +1,20 @@
+<table class="services-table">
+    <thead>
+        <tr>
+            <th>Servicio</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+            <th>Monto</th>
+        </tr>
+    </thead>
+    <tbody>
+        <% services.forEach(function(service) { %>
+            <tr>
+                <td><%= service.name %></td>
+                <td><%= service.date %></td>
+                <td><span class="status <%= service.status %>"><%= service.status === 'completed' ? 'Completado' : service.status %></span></td>
+                <td>S/<%= service.amount %></td>
+            </tr>
+        <% }); %>
+    </tbody>
+</table>

@@ -1,0 +1,14 @@
+<header class="main-header">
+    <button class="sidebar-toggle">
+        <i class="fas fa-bars"></i>
+    </button>
+    <div class="header-content">
+        <h1><%= title %></h1>
+        <div class="user-menu">
+            <span class="user-name"><%= user?.name || 'Usuario' %></span>
+            <a href="/logout" class="btn-logout">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </a>
+        </div>
+    </div>
+</header>

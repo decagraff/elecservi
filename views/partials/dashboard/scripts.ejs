@@ -1,0 +1,53 @@
+<script>
+    // Declaración de la función toggleSidebar
+    function toggleSidebar() {
+        document.querySelector('.dashboard-sidebar').classList.toggle('collapsed');
+    }
+
+    // Esperar a que el DOM esté completamente cargado
+    document.addEventListener('DOMContentLoaded', function() {
+        // Verificar si estamos en el panel de administración y si el gráfico existe
+        const salesChartElement = document.getElementById('salesChart');
+        if (salesChartElement) {
+            const ctx = salesChartElement.getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo'],
+                    datasets: [{
+                        label: 'Ventas (S/) ',
+                        data: [1200, 1500, 1700, 1300, 1600],
+                        backgroundColor: 'rgba(37, 99, 235, 0.7)',
+                        borderColor: 'rgba(37, 99, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'S/' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Llamada a toggleSidebar al hacer clic en el botón de menú
+        const sidebarToggleButton = document.querySelector('.sidebar-toggle');
+        if (sidebarToggleButton) {
+            sidebarToggleButton.addEventListener('click', toggleSidebar);
+        }
+    });
+</script>

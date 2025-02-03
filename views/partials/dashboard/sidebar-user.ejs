@@ -1,0 +1,22 @@
+<aside class="dashboard-sidebar">
+    <div class="sidebar-header">
+        <img src="/images/elecservi.ico" alt="Logo" class="logo">
+        <h2>Electro Servicios</h2>
+    </div>
+    <nav class="sidebar-nav">
+        <ul>
+            <li class="<%= currentPage === 'dashboard' ? 'active' : '' %>">
+                <a href="/dashboard/user"><i class="fas fa-home"></i> <span>Inicio</span></a>
+            </li>
+            <li class="<%= currentPage === 'profile' ? 'active' : '' %>">
+                <a href="/profile"><i class="fas fa-user"></i> <span>Mi Perfil</span></a>
+            </li>
+            <li class="<%= currentPage === 'orders' ? 'active' : '' %>">
+                <a href="/orders"><i class="fas fa-clipboard-list"></i> <span>Mis Pedidos</span></a>
+            </li>
+            <li class="<%= currentPage === 'services' ? 'active' : '' %>">
+                <a href="/services"><i class="fas fa-tools"></i> <span>Servicios</span></a>
+            </li>
+        </ul>
+    </nav>
+</aside>

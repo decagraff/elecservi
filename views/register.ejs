@@ -1,11 +1,9 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro - Electro Servicios Chávez SAC</title>
+    <%- include('./partials/head') %>
+    <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/auth.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="auth-container">
@@ -14,6 +12,14 @@
                 <img src="/images/elecservi.ico" alt="Logo Electro Servicios Chávez SAC">
                 <h2>Registro</h2>
             </div>
+
+            <!-- Mostrar mensaje de error si existe -->
+            <% if (typeof message !== 'undefined' && message) { %>
+                <div class="alert alert-danger">
+                    <strong>Error:</strong> <%= message %>
+                </div>
+            <% } %>
+
             <form id="register-form" action="/register" method="POST">
                 <div class="form-group">
                     <label for="name"><i class="fas fa-user"></i> Nombre Completo</label>
@@ -29,13 +35,14 @@
                 </div>
                 <button type="submit" class="btn-auth">Registrarse</button>
             </form>
+
             <div class="auth-footer">
                 <p>¿Ya tienes una cuenta? <a href="/login">Inicia sesión aquí</a></p>
             </div>
         </div>
     </div>
 
-    <!-- JavaScript -->
+    <%- include('partials/scripts') %>
     <script src="/js/auth.js"></script>
 </body>
 </html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <%- include('../partials/head', { title: title }) %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <%- include('../partials/dashboard/sidebar-user') %>
+
+        <main class="dashboard-main">
+            <!-- Header -->
+            <%- include('../partials/dashboard/header', { title: 'Panel de Usuario', user: user }) %>
+
+            <div class="dashboard-content">
+                <div class="content-section">
+                    <h3 class="section-title">Servicios Activos</h3>
+                    <div class="service-list">
+                        <% activeServices.forEach(function(service) { %>
+                            <div class="service-item">
+                                <div class="service-icon">
+                                    <i class="fas fa-<%= service.icon %>"></i>
+                                </div>
+                                <div class="service-details">
+                                    <h4><%= service.name %></h4>
+                                    <p>Progreso: <%= service.progress %>%</p>
+                                    <div class="progress-bar">
+                                        <div class="progress" style="width: '<%= (isNaN(service.progress) ? 0 : service.progress) %>%'"></div>
+                                    </div>
+                                                                      
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                </div>
+
+                <div class="grid-container">
+                    <div class="content-section">
+                        <h3 class="section-title">Servicios Recientes</h3>
+                        <div class="recent-activity-list">
+                            <% recentServices.forEach(function(service) { %>
+                                <div class="recent-activity-item">
+                                    <div class="activity-icon">
+                                        <i class="fas fa-cogs"></i> <!-- Cambia el ícono según el servicio -->
+                                    </div>
+                                    <div class="activity-details">
+                                        <h4><%= service.name %></h4>
+                                        <p class="activity-time"><%= service.date %></p>
+                                        <p class="activity-status"><%= service.status %></p>
+                                        <p class="activity-amount">Monto: S/<%= service.amount %></p>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+                    </div>
+                    
+                    
+
+                    <div class="content-section">
+                        <h3 class="section-title">Actividad Reciente</h3>
+                        <%- include('../partials/dashboard/recent-activity', { activities: recentActivity }) %>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <%- include('../partials/dashboard/scripts') %>
+</body>
+
+</html>

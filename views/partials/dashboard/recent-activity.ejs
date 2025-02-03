@@ -1,0 +1,11 @@
+<div class="activity-list">
+    <% activities.forEach(function(activity) { %>
+        <div class="activity-item">
+            <i class="fas fa-<%= activity.type %>"></i>
+            <div>
+                <h4><%= activity.title %></h4>
+                <p class="time-text">Hace <%= activity.time %></p>
+            </div>
+        </div>
+    <% }); %>
+</div>

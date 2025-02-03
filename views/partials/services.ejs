@@ -1,0 +1,14 @@
+<section id="services" class="services">
+    <div class="container">
+        <h2>Nuestros Servicios</h2>
+        <div class="service-grid">
+            <% services.forEach(function(service) { %>
+                <div class="service-card">
+                    <i class="fas <%= service.icon %>"></i>
+                    <h3><%= service.title %></h3>
+                    <p><%= service.description %></p>
+                </div>
+            <% }); %>
+        </div>
+    </div>
+</section>

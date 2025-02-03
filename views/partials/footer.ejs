@@ -1,0 +1,27 @@
+<footer>
+    <div class="container">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3><%= typeof companyName !== 'undefined' ? companyName : 'Electro Servicios Chávez SAC' %></h3>
+                <p>Expertos en soluciones eléctricas para hogares y empresas.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Enlaces Rápidos</h3>
+                <ul>
+                    <% footerLinks.forEach(function(link) { %>
+                        <li><a href="<%= link.url %>"><%= link.text %></a></li>
+                    <% }); %>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Contacto</h3>
+                <p><i class="fas fa-map-marker-alt"></i> <%= address %></p>
+                <p><i class="fas fa-phone"></i> <%= phone %></p>
+                <p><i class="fas fa-envelope"></i> <%= email %></p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; <%= new Date().getFullYear() %> <%= companyName %>. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</footer>

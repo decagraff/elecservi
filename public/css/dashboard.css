@@ -387,6 +387,63 @@ body {
     border-radius: 8px;
 }
 
+/* Servicios Recientes */
+.recent-activity-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 20px 0;
+}
+
+.recent-activity-item {
+    display: flex;
+    align-items: center;
+    background-color: #ffffff;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.recent-activity-item:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    transform: translateY(-5px);
+}
+
+.activity-icon {
+    font-size: 24px;
+    color: #4caf50; /* Color que puedes personalizar */
+    margin-right: 20px;
+}
+
+.activity-details {
+    flex: 1;
+}
+
+.activity-details h4 {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #333;
+}
+
+.activity-time,
+.activity-status,
+.activity-amount {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 5px;
+}
+
+.activity-status {
+    font-weight: bold;
+    color: #ff5722; /* Puedes personalizar el color según el estado (completado, pendiente, etc.) */
+}
+
+.activity-amount {
+    font-weight: bold;
+    color: #4caf50; /* Personaliza también el color si lo prefieres */
+}
+
 /* Chart Section */
 .chart-section {
     height: 400px;
@@ -434,3 +491,90 @@ body {
         font-size: 1.25rem;
     }
 }
+
+/* Tabla de Servicios */
+.services-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.services-table th,
+.services-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.services-table th {
+    font-weight: 600;
+    background: #f8fafc;
+    color: var(--secondary-color);
+}
+
+.services-table td {
+    font-size: 0.875rem;
+    color: var(--dark-color);
+}
+
+.services-table tr:nth-child(even) {
+    background-color: #f9fafb;
+}
+
+.services-table tr:hover {
+    background-color: #f1f5f9;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-buttons .btn {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.action-buttons .btn-warning {
+    background: #f59e0b;
+    color: white;
+}
+
+.action-buttons .btn-danger {
+    background: #dc2626;
+    color: white;
+}
+
+.action-buttons .btn-warning:hover {
+    background: #d97706;
+}
+
+.action-buttons .btn-danger:hover {
+    background: #b91c1c;
+}
+
+/* Botón "Agregar Nuevo Servicio" */
+.service-management {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+.service-management .btn-primary {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: transform 0.3s ease;
+}
+
+.service-management .btn-primary:hover {
+    background: #1d4ed8;
+    transform: translateY(-2px);
+}
+

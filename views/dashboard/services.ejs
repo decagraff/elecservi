@@ -1,0 +1,93 @@
+<!-- views/dashboard/services.ejs -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <%- include('../partials/head', { title: title, stylesheets: stylesheets }) %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <%- include('../partials/dashboard/sidebar-admin') %>
+
+        <main class="dashboard-main">
+            <%- include('../partials/dashboard/header', { title: 'Gestión de Servicios', user: user }) %>
+
+            <div class="dashboard-content">
+                <div class="content-section">
+                    <div class="section-header">
+                        <h3 class="section-title">Servicios Disponibles</h3>
+                        <div class="service-management">
+                            <a href="/services/add" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Nuevo Servicio
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="services-table">
+                            <thead>
+                                <tr>
+                                    <th>Servicio</th>
+                                    <th>Descripción</th>
+                                    <th>Precio Base</th>
+                                    <th>Fecha</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (services && services.length > 0) { %>
+                                    <% services.forEach(service => { %>
+                                        <tr>
+                                            <td>
+                                                <div class="service-name">
+                                                    <i class="fas fa-tools"></i>
+                                                    <%= service.name %>
+                                                </div>
+                                            </td>
+                                            <td><%= service.description %></td>
+                                            <td>S/ <%= typeof service.base_price === 'number' ? service.base_price.toFixed(2) : service.base_price %></td>
+                                            <td><%= service.created_at ? new Date(service.created_at).toLocaleDateString('es-PE') : 'Fecha no disponible' %></td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <a href="/services/edit/<%= service.id %>" class="btn btn-warning">
+                                                        <i class="fas fa-edit"></i> Editar
+                                                    </a>
+                                                    <button class="btn btn-danger" onclick="deleteService(<%= service.id %>)">
+                                                        <i class="fas fa-trash"></i> Eliminar
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <% }); %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="5" style="text-align: center;">No hay servicios registrados</td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <%- include('../partials/dashboard/scripts') %>
+    <script>
+        function deleteService(id) {
+            if (confirm('¿Está seguro de eliminar este servicio?')) {
+                fetch(`/services/delete/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        }
+    </script>
+</body>
+</html>
