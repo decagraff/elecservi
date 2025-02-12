@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <%- include('../partials/head', { title: title }) %>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
     <link rel="stylesheet" href="/css/dashboard.css">
 </head>
-
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
@@ -18,59 +16,168 @@
             <%- include('../partials/dashboard/header', { title: 'Panel de Usuario', user: user }) %>
 
             <div class="dashboard-content">
+                
+
+                <!-- Active Services Section -->
                 <div class="content-section">
-                    <h3 class="section-title">Servicios Activos</h3>
-                    <div class="service-list">
-                        <% activeServices.forEach(function(service) { %>
-                            <div class="service-item">
-                                <div class="service-icon">
-                                    <i class="fas fa-<%= service.icon %>"></i>
-                                </div>
-                                <div class="service-details">
-                                    <h4><%= service.name %></h4>
-                                    <p>Progreso: <%= service.progress %>%</p>
-                                    <div class="progress-bar">
-                                        <div class="progress" style="width: '<%= (isNaN(service.progress) ? 0 : service.progress) %>%'"></div>
+                    <h3 class="section-title">Mis Servicios Activos</h3>
+                    <div class="grid-container">
+                        <% if (activeServices && activeServices.length > 0) { %>
+                            <% activeServices.forEach(function(service) { %>
+                                <div class="service-item">
+                                    <div class="service-icon">
+                                        <i class="fas fa-<%= service.icon %>"></i>
                                     </div>
-                                                                      
+                                    <div class="service-details">
+                                        <h4><%= service.name %></h4>
+                                        <p>Progreso: <%= service.progress %>%</p>
+                                        <div class="progress-bar">
+                                            <div class="progress" style="width: <%= (Number(service.progress) || 0) + '%' %>"></div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        <% }); %>
+                            <% }); %>
+                        <% } else { %>
+                            <p>No tienes servicios activos en este momento.</p>
+                        <% } %>
                     </div>
                 </div>
 
-                <div class="grid-container">
-                    <div class="content-section">
-                        <h3 class="section-title">Servicios Recientes</h3>
-                        <div class="recent-activity-list">
+                <!-- Recent Services Section -->
+                <div class="content-section">
+                    <h3 class="section-title">Historial de Servicios</h3>
+                    <div class="recent-activity-list">
+                        <% if (recentServices && recentServices.length > 0) { %>
                             <% recentServices.forEach(function(service) { %>
                                 <div class="recent-activity-item">
                                     <div class="activity-icon">
-                                        <i class="fas fa-cogs"></i> <!-- Cambia el ícono según el servicio -->
+                                        <i class="fas fa-clock"></i>
                                     </div>
                                     <div class="activity-details">
                                         <h4><%= service.name %></h4>
                                         <p class="activity-time"><%= service.date %></p>
                                         <p class="activity-status"><%= service.status %></p>
-                                        <p class="activity-amount">Monto: S/<%= service.amount %></p>
+                                        <p class="activity-amount">Monto: S/ <%= service.amount %></p>
                                     </div>
                                 </div>
                             <% }); %>
-                        </div>
+                        <% } else { %>
+                            <p>No tienes servicios recientes.</p>
+                        <% } %>
                     </div>
-                    
-                    
+                </div>
 
-                    <div class="content-section">
-                        <h3 class="section-title">Actividad Reciente</h3>
-                        <%- include('../partials/dashboard/recent-activity', { activities: recentActivity }) %>
+                <!-- Recent Activity Section -->
+                <div class="content-section">
+                    <h3 class="section-title">Actividad Reciente</h3>
+                    <div class="recent-activity-list">
+                        <% if (recentActivity && recentActivity.length > 0) { %>
+                            <% recentActivity.forEach(function(activity) { %>
+                                <div class="recent-activity-item">
+                                    <div class="activity-icon">
+                                        <i class="fas fa-<%= activity.type %>"></i>
+                                    </div>
+                                    <div class="activity-details">
+                                        <h4><%= activity.title %></h4>
+                                        <p class="activity-time">Hace <%= activity.time %></p>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <p>No hay actividad reciente.</p>
+                        <% } %>
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <%- include('../partials/dashboard/scripts') %>
-</body>
+    <!-- Service Request Modal -->
+    <div class="modal" id="serviceRequestModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Agregar Nuevo Servicio</h2>
+                <span class="modal-close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form action="#" id="serviceRequestForm">
+                    <div class="form-group">
+                        <label for="serviceName">Nombre del Servicio</label>
+                        <input type="text" id="serviceName" name="serviceName" class="input-field" placeholder="Ingresa el nombre del servicio">
+                    </div>
+                    <div class="form-group">
+                        <label for="serviceDescription">Descripción</label>
+                        <textarea id="serviceDescription" name="serviceDescription" class="input-field" placeholder="Agrega una descripción del servicio"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="serviceCategory">Categoría</label>
+                        <select id="serviceCategory" name="serviceCategory" class="input-field">
+                            <option value="web">Desarrollo Web</option>
+                            <option value="design">Diseño Gráfico</option>
+                            <option value="marketing">Marketing</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="submitService()">Agregar Servicio</button>
+                <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+            </div>
+        </div>
+    </div>
 
+    <%- include('../partials/dashboard/scripts') %>
+
+    <script>
+        // Solicitar Servicio
+        function requestService(serviceId) {
+            const serviceRequestModal = document.getElementById('serviceRequestModal');
+            if (serviceRequestModal) {
+                serviceRequestModal.style.display = 'block'; // Mostrar el modal
+            } else {
+                console.error("Elemento no encontrado: serviceRequestModal");
+            }
+        }
+
+        // Cerrar el modal
+        function closeModal() {
+            const serviceRequestModal = document.getElementById('serviceRequestModal');
+            if (serviceRequestModal) {
+                serviceRequestModal.style.display = 'none'; // Ocultar el modal
+            } else {
+                console.error("Elemento no encontrado: serviceRequestModal");
+            }
+        }
+
+        // Lógica para enviar la solicitud de servicio
+        document.addEventListener('DOMContentLoaded', function() {
+            const serviceRequestForm = document.getElementById('serviceRequestForm');
+            if (serviceRequestForm) {
+                serviceRequestForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const formData = new FormData(this);
+
+                    fetch('/services/request', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Solicitud de servicio enviada exitosamente');
+                            closeModal();
+                            location.reload();  // Recarga la página para reflejar la nueva solicitud
+                        } else {
+                            alert('Error al enviar la solicitud: ' + (data.message || 'Error desconocido'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Ocurrió un error al enviar la solicitud');
+                    });
+                });
+            }
+        });
+    </script>
+</body>
 </html>

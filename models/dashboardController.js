@@ -1,71 +1,71 @@
-const pool = require('./db');
+const pool = require('../db');
 
-const dashboardQueries = {
-    getTotalClients: async () => {
-        const [rows] = await pool.query('SELECT COUNT(*) as total FROM clients');
-        return rows[0].total;
-    },
-    
-    getTotalActiveServices: async () => {
-        const [rows] = await pool.query(
-            'SELECT COUNT(*) as total FROM service_orders WHERE status = "in_progress"'
-        );
-        return rows[0].total;
-    },
-    
-    getRecentOrders: async (limit) => {
-        const [rows] = await pool.query(`
-            SELECT so.*, c.name as client_name, s.name as service_name 
-            FROM service_orders so
-            JOIN clients c ON so.client_id = c.id
-            JOIN services s ON so.service_id = s.id
-            ORDER BY so.created_at DESC
-            LIMIT ?`, [limit]
-        );
-        return rows;
-    },
-    
-    getMonthlyRevenue: async () => {
-        const [rows] = await pool.query(`
-            SELECT SUM(amount) as total 
-            FROM payments 
-            WHERE MONTH(payment_date) = MONTH(CURRENT_DATE())
-            AND status = 'completed'`
-        );
-        return rows[0].total || 0;
-    },
-    
-    getUserActiveServices: async (userId) => {
-        const [rows] = await pool.query(`
-            SELECT so.*, s.name as service_name
-            FROM service_orders so
-            JOIN services s ON so.service_id = s.id
-            JOIN clients c ON so.client_id = c.id
-            WHERE c.id = ? AND so.status = 'in_progress'`, [userId]
-        );
-        return rows;
-    },
-    
-    getUserServiceHistory: async (userId) => {
-        const [rows] = await pool.query(`
-            SELECT COUNT(*) as total
-            FROM service_orders so
-            JOIN clients c ON so.client_id = c.id
-            WHERE c.id = ? AND so.status = 'completed'`, [userId]
-        );
-        return rows[0].total;
-    },
-    
-    getUserTotalSpent: async (userId) => {
-        const [rows] = await pool.query(`
-            SELECT SUM(p.amount) as total
-            FROM payments p
-            JOIN service_orders so ON p.service_order_id = so.id
-            JOIN clients c ON so.client_id = c.id
-            WHERE c.id = ? AND p.status = 'completed'`, [userId]
-        );
-        return rows[0].total || 0;
+const dashboardController = {
+    getUserDashboard: async (req, res) => {
+        try {
+            const userId = req.session.user.id;
+
+            // Fetch available services
+            const [availableServices] = await pool.query(
+                'SELECT id, name, description, base_price FROM services'
+            );
+
+            // Fetch active services (from service_orders)
+            const [activeServices] = await pool.query(`
+                SELECT 
+                    s.id, 
+                    s.name, 
+                    so.status, 
+                    so.progress_percentage as progress
+                FROM service_orders so
+                JOIN services s ON so.service_id = s.id
+                WHERE so.user_id = ? AND so.status NOT IN ('completed', 'cancelled')
+            `, [userId]);
+
+            // Fetch recent services
+            const [recentServices] = await pool.query(`
+                SELECT 
+                    s.name, 
+                    so.created_at as date, 
+                    so.status, 
+                    so.total_amount as amount
+                FROM service_orders so
+                JOIN services s ON so.service_id = s.id
+                WHERE so.user_id = ?
+                ORDER BY so.created_at DESC
+                LIMIT 5
+            `, [userId]);
+
+            // Render the dashboard
+            res.render('dashboard/user', {
+                title: 'Panel de Usuario | Electro Servicios Chávez',
+                user: req.session.user,
+                currentPage: 'dashboard',
+                availableServices: availableServices,
+                activeServices: activeServices,
+                recentServices: recentServices.map(service => ({
+                    ...service,
+                    date: service.date ? new Date(service.date).toLocaleDateString('es-PE') : 'Fecha no disponible',
+                    status: getStatusText(service.status),
+                    amount: parseFloat(service.amount).toFixed(2)
+                }))
+            });
+        } catch (err) {
+            console.error('Error en el panel de usuario:', err);
+            res.status(500).send('Error interno del servidor');
+        }
     }
 };
 
-module.exports = dashboardQueries;
+// Helper function to convert status to user-friendly text
+function getStatusText(status) {
+    const statusMap = {
+        'pending': 'Pendiente',
+        'in_progress': 'En Progreso',
+        'completed': 'Completado',
+        'cancelled': 'Cancelado'
+    };
+    return statusMap[status] || status;
+}
+
+module.exports = dashboardController;

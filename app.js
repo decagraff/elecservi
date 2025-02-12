@@ -1,3 +1,6 @@
+// ==================================
+// app.js
+// ==================================
 const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser');
@@ -17,18 +20,46 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Configuración de sesión
 app.use(session({
-    secret: process.env.SESSION_SECRET,
+    secret: process.env.SESSION_SECRET || 'tu_secreto_aqui',
     resave: false,
     saveUninitialized: true,
     cookie: { secure: false }
 }));
+
+// Middleware para verificar autenticación
+const authMiddleware = (req, res, next) => {
+    const publicRoutes = ['/', '/login', '/register'];
+    
+    if (publicRoutes.includes(req.path)) {
+        return next();
+    }
+
+    if (!req.session.user) {
+        return res.redirect('/login');
+    }
+    next();
+};
+
+app.use(authMiddleware);
+
+// Rutas
+const authRoutes = require('./routes/auth');
+const dashboardRoutes = require('./routes/dashboard');
+const serviceRoutes = require('./routes/serviceRoutes');
+
+app.use('/', authRoutes);
+app.use('/dashboard', dashboardRoutes);
+app.use(serviceRoutes);
 
 // Ruta para la página de inicio
 app.get('/', (req, res) => {
     res.render('index', {
         title: 'Electro Servicios Chávez SAC',
         currentPage: 'home',
+        user: req.session.user,
         heroTitle: 'Soluciones Eléctricas Profesionales',
         heroText: 'Ofrecemos servicios de calidad para hogares y empresas. Confía en los expertos.',
         services: [
@@ -58,27 +89,26 @@ app.get('/', (req, res) => {
         address: 'Av. Principal 123, Lima, Perú',
         phone: '+51 987 654 321',
         email: 'info@electrochavez.com',
-        stylesheets: '/css/styles.css'  // Pasa esta variable a la vista
+        stylesheets: '/css/styles.css'
     });
 });
 
-// Rutas de autenticación y dashboard
-const authRoutes = require('./routes/auth');
-const dashboardRoutes = require('./routes/dashboard');
+// error handler
+app.use(function(err, req, res, next) {
+    // set locals, only providing error in development
+    res.locals.message = err.message;
+    res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-// **Aquí no deberías declarar `serviceRoutes` de nuevo si ya lo has hecho.**
-const serviceRoutes = require('./routes/serviceRoutes');  // **Asegúrate de no tener esta línea duplicada en otra parte del archivo**
+    // render the error page
+    res.status(err.status || 500);
+    res.render('error', {
+        title: 'Error',
+        stylesheets: '/css/style.css', // Añade el stylesheet por defecto
+        message: err.message,
+        error: err
+    });
+});
 
-// Usar rutas de autenticación
-app.use('/', authRoutes);
-
-// Usar rutas de dashboard
-app.use('/dashboard', dashboardRoutes);
-
-// Usar rutas de servicios
-app.use(serviceRoutes);  // Aquí se agregan las rutas de servicios
-
-// Iniciar el servidor
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });

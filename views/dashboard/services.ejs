@@ -1,93 +1,166 @@
-<!-- views/dashboard/services.ejs -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <%- include('../partials/head', { title: title, stylesheets: stylesheets }) %>
+    <%- include('../partials/head', { title: title }) %>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="/css/dashboard.css">
 </head>
 <body>
     <div class="dashboard-container">
-        <%- include('../partials/dashboard/sidebar-admin') %>
+        <!-- Sidebar -->
+        <%- include('../partials/dashboard/sidebar-user') %>
 
         <main class="dashboard-main">
-            <%- include('../partials/dashboard/header', { title: 'Gestión de Servicios', user: user }) %>
+            <!-- Header -->
+            <%- include('../partials/dashboard/header', { title: 'Servicios Disponibles', user: user }) %>
 
             <div class="dashboard-content">
+                <!-- Available Services Section -->
                 <div class="content-section">
-                    <div class="section-header">
-                        <h3 class="section-title">Servicios Disponibles</h3>
-                        <div class="service-management">
-                            <a href="/services/add" class="btn btn-primary">
-                                <i class="fas fa-plus"></i> Nuevo Servicio
-                            </a>
-                        </div>
+                    <h3 class="section-title">Catálogo de Servicios</h3>
+                    <div class="grid-container">
+                        <% services.forEach(function(service) { %>
+                            <div class="service-item">
+                                <div class="service-icon">
+                                    <i class="fas fa-tools"></i>
+                                </div>
+                                <div class="service-details">
+                                    <h4><%= service.name %></h4>
+                                    <p><%= service.description %></p>
+                                    <div class="service-price">
+                                        <span>Precio Base:</span>
+                                        <strong>S/ <%= service.base_price.toFixed(2) %></strong>
+                                    </div>
+                                </div>
+                                <button class="btn btn-primary" onclick="requestService('<%= service.id %>')">
+                                    Solicitar Servicio
+                                </button>
+                            </div>
+                        <% }); %>
                     </div>
+                </div>
 
-                    <div class="table-container">
-                        <table class="services-table">
-                            <thead>
-                                <tr>
-                                    <th>Servicio</th>
-                                    <th>Descripción</th>
-                                    <th>Precio Base</th>
-                                    <th>Fecha</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% if (services && services.length > 0) { %>
-                                    <% services.forEach(service => { %>
-                                        <tr>
-                                            <td>
-                                                <div class="service-name">
-                                                    <i class="fas fa-tools"></i>
-                                                    <%= service.name %>
-                                                </div>
-                                            </td>
-                                            <td><%= service.description %></td>
-                                            <td>S/ <%= typeof service.base_price === 'number' ? service.base_price.toFixed(2) : service.base_price %></td>
-                                            <td><%= service.created_at ? new Date(service.created_at).toLocaleDateString('es-PE') : 'Fecha no disponible' %></td>
-                                            <td>
-                                                <div class="action-buttons">
-                                                    <a href="/services/edit/<%= service.id %>" class="btn btn-warning">
-                                                        <i class="fas fa-edit"></i> Editar
-                                                    </a>
-                                                    <button class="btn btn-danger" onclick="deleteService(<%= service.id %>)">
-                                                        <i class="fas fa-trash"></i> Eliminar
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    <% }); %>
-                                <% } else { %>
-                                    <tr>
-                                        <td colspan="5" style="text-align: center;">No hay servicios registrados</td>
-                                    </tr>
-                                <% } %>
-                            </tbody>
-                        </table>
+                <!-- Active Services Section -->
+                <div class="content-section">
+                    <h3 class="section-title">Mis Servicios Activos</h3>
+                    <div class="grid-container">
+                        <% if (activeServices && activeServices.length > 0) { %>
+                            <% activeServices.forEach(function(service) { %>
+                                <div class="service-item">
+                                    <div class="service-icon">
+                                        <i class="fas fa-spinner"></i>
+                                    </div>
+                                    <div class="service-details">
+                                        <h4><%= service.name %></h4>
+                                        <p>Estado: <%= service.status === 'pending' ? 'Pendiente' : 'En Progreso' %></p>
+                                        <div class="progress-bar">
+                                            <div class="progress" style="width: <%= service.progress %>%"></div>
+                                        </div>
+                                        <p class="mt-2">Progreso: <%= service.progress %>%</p>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <p>No tienes servicios activos en este momento.</p>
+                        <% } %>
+                    </div>
+                </div>
+
+                <!-- Service History Section -->
+                <div class="content-section">
+                    <h3 class="section-title">Historial de Servicios</h3>
+                    <div class="recent-activity-list">
+                        <% if (serviceHistory && serviceHistory.length > 0) { %>
+                            <% serviceHistory.forEach(function(service) { %>
+                                <div class="recent-activity-item">
+                                    <div class="activity-icon">
+                                        <i class="fas fa-history"></i>
+                                    </div>
+                                    <div class="activity-details">
+                                        <h4><%= service.name %></h4>
+                                        <p class="activity-time">Fecha: <%= service.date %></p>
+                                        <p class="activity-status">Estado: <%= service.status === 'completed' ? 'Completado' : 'Cancelado' %></p>
+                                        <p class="activity-amount">Monto: S/ <%= service.total_amount.toFixed(2) %></p>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <p>No hay historial de servicios.</p>
+                        <% } %>
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
+    <!-- Service Request Modal -->
+    <div class="modal" id="serviceRequestModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Solicitar Servicio</h2>
+                <span class="modal-close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="serviceRequestForm">
+                    <input type="hidden" id="serviceId" name="serviceId">
+                    <div class="form-group">
+                        <label for="description">Descripción de la solicitud</label>
+                        <textarea id="description" name="description" class="input-field" rows="4" 
+                                placeholder="Describe los detalles de tu solicitud..." required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="submitServiceRequest()">Enviar Solicitud</button>
+                <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+    
+
     <%- include('../partials/dashboard/scripts') %>
-    <script>
-        function deleteService(id) {
-            if (confirm('¿Está seguro de eliminar este servicio?')) {
-                fetch(`/services/delete/${id}`, {
-                    method: 'DELETE'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        window.location.reload();
-                    }
-                })
-                .catch(error => console.error('Error:', error));
+
+    
+<script>
+    function requestService(serviceId) {
+        document.getElementById('serviceId').value = serviceId;
+        document.getElementById('serviceRequestModal').style.display = 'block';
+    }
+    
+    function closeModal() {
+        document.getElementById('serviceRequestModal').style.display = 'none';
+        document.getElementById('serviceRequestForm').reset();
+    }
+    
+    async function submitServiceRequest() {
+        const form = document.getElementById('serviceRequestForm');
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+    
+        try {
+            const response = await fetch('/services/request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+    
+            const result = await response.json();
+    
+            if (result.success) {
+                alert('Servicio solicitado exitosamente');
+                closeModal();
+                location.reload();
+            } else {
+                alert('Error al solicitar el servicio: ' + result.message);
             }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error al procesar la solicitud');
         }
+    }
     </script>
 </body>
 </html>
