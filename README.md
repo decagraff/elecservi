@@ -20,7 +20,6 @@ Esto descargará el proyecto en tu máquina local.
 Navega a la carpeta del proyecto en la terminal:
 ```bash
 cd elecservi
-cd elecservi
 code .
 ```
 
@@ -43,7 +42,7 @@ SESSION_SECRET=your_secret_key  # Clave secreta para las sesiones
 ```
 
 ### 5. Configurar la base de datos MySQL
-Instala MySQL si aún no lo tienes y crea la base de datos:
+Instala MySQL si aún no lo tienes y crea la base de datos con los datos de DB.text:
 ```sql
 CREATE DATABASE electroservicios_db;
 ```
