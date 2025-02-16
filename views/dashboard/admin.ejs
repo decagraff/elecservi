@@ -1,5 +1,4 @@
 <!-- admin.ejs -->
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -15,31 +14,161 @@
             <%- include('../partials/dashboard/header', { title: 'Panel de Administración', user: user }) %>
 
             <div class="dashboard-content">
-                <div class="content-section">
-                    <h3 class="section-title">Estado de Servicios Actuales</h3>
-                    <div class="table-container">
-                        <%- include('../partials/dashboard/services-table', { services: services }) %>
+                <!-- Stats Overview Section -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Clientes</h3>
+                            <div class="stat-number"><%= stats.total_users %></div>
+                            <span class="stat-change positive">+5% este mes</span>
+                        </div>
                     </div>
-                    <!-- Agregar un botón para gestionar los servicios -->
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Órdenes Totales</h3>
+                            <div class="stat-number"><%= stats.total_orders %></div>
+                            <span class="stat-change neutral">Últimos 30 días: <%= stats.orders_last_30_days %></span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Ingresos Totales</h3>
+                            <div class="stat-number">S/. <%= stats.total_revenue %></div>
+                            <span class="stat-change positive">+8% vs mes anterior</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Services Section -->
+                <div class="content-section">
+                    <div class="section-header">
+                        <h3 class="section-title">Estado de Servicios Actuales</h3>
+                        <div class="section-actions">
+                            <button class="btn-filter">
+                                <i class="fas fa-filter"></i> Filtrar
+                            </button>
+                            <button class="btn-export">
+                                <i class="fas fa-download"></i> Exportar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="services-table">
+                            <thead>
+                                <tr>
+                                    <th>Servicio</th>
+                                    <th>Precio Base</th>
+                                    <th>Órdenes Totales</th>
+                                    <th>Completadas</th>
+                                    <th>En Progreso</th>
+                                    <th>Pendientes</th>
+                                    <th>Ingresos</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% services.forEach(service => { %>
+                                <tr>
+                                    <td><%= service.name %></td>
+                                    <td>S/. <%= service.base_price %></td>
+                                    <td><%= service.total_orders %></td>
+                                    <td><span class="status completed"><%= service.completed_orders %></span></td>
+                                    <td><span class="status in-progress"><%= service.in_progress_orders %></span></td>
+                                    <td><span class="status pending"><%= service.pending_orders %></span></td>
+                                    <td>S/. <%= service.total_revenue %></td>
+                                    <td class="action-buttons">
+                                        <button class="btn btn-primary" onclick="editService(<%= service.id %>)">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-danger" onclick="deleteService(<%= service.id %>)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
                     <div class="service-management">
-                        <a href="/dashboard/services" class="btn btn-primary">Gestionar Servicios</a>
+                        <a href="/dashboard/services/new" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Agregar Nuevo Servicio
+                        </a>
                     </div>
                 </div>
 
                 <div class="grid-container">
+                    <!-- Sales Chart Section -->
                     <div class="content-section chart-section">
-                        <h3 class="section-title">Ventas por Mes</h3>
+                        <div class="section-header">
+                            <h3 class="section-title">Ventas por Mes</h3>
+                            <div class="chart-controls">
+                                <select id="chartPeriod" class="form-select">
+                                    <option value="6">Últimos 6 meses</option>
+                                    <option value="12">Último año</option>
+                                </select>
+                            </div>
+                        </div>
                         <canvas id="salesChart"></canvas>
                     </div>
 
+                    <!-- Recent Clients Section -->
                     <div class="content-section">
-                        <h3 class="section-title">Clientes Nuevos</h3>
-                        <%- include('../partials/dashboard/recent-clients', { clients: recentClients }) %>
+                        <div class="section-header">
+                            <h3 class="section-title">Clientes Nuevos</h3>
+                            <a href="/dashboard/clients" class="btn-link">Ver todos</a>
+                        </div>
+                        <div class="recent-clients-list">
+                            <% recentClients.forEach(client => { %>
+                            <div class="client-card">
+                                <div class="client-info">
+                                    <h4><%= client.name %></h4>
+                                    <p><%= client.email %></p>
+                                </div>
+                                <div class="client-stats">
+                                    <span class="stat">
+                                        <i class="fas fa-shopping-cart"></i>
+                                        <%= client.total_orders %> órdenes
+                                    </span>
+                                    <span class="stat">
+                                        <i class="fas fa-dollar-sign"></i>
+                                        S/. <%= client.total_spent %>
+                                    </span>
+                                </div>
+                            </div>
+                            <% }); %>
+                        </div>
                     </div>
 
+                    <!-- Recent Activity Section -->
                     <div class="content-section">
-                        <h3 class="section-title">Actividad Reciente</h3>
-                        <%- include('../partials/dashboard/recent-activity', { activities: recentActivity }) %>
+                        <div class="section-header">
+                            <h3 class="section-title">Actividad Reciente</h3>
+                            <a href="/dashboard/activity" class="btn-link">Ver todo</a>
+                        </div>
+                        <div class="activity-list">
+                            <% recentActivity.forEach(activity => { %>
+                            <div class="activity-item">
+                                <i class="fas fa-<%= activity.type %>"></i>
+                                <div class="activity-details">
+                                    <h4><%= activity.title %></h4>
+                                    <p class="activity-time"><%= activity.time %></p>
+                                    <p class="activity-status"><%= activity.status %></p>
+                                    <p class="activity-amount">S/. <%= activity.amount %></p>
+                                </div>
+                            </div>
+                            <% }); %>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -48,5 +177,25 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
     <%- include('../partials/dashboard/scripts') %>
+    <script>
+        // Initialize sales chart
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        const salesChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Ventas Mensuales',
+                    data: [12000, 19000, 15000, 25000, 22000, 30000],
+                    borderColor: '#2563eb',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    </script>
 </body>
 </html>

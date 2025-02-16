@@ -1,0 +1,175 @@
+const express = require('express');
+const router = express.Router();
+const pool = require('../db');
+
+const reportsController = {
+    // Mostrar página principal de reportes
+    showReportsPage: async (req, res) => {
+        try {
+            // Obtener rango de fechas del query o usar último mes por defecto
+            const startDate = req.query.startDate || new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0];
+            const endDate = req.query.endDate || new Date().toISOString().split('T')[0];
+
+            // Resumen de ventas
+            const [salesSummary] = await pool.query(`
+                SELECT 
+                    COUNT(*) as total_orders,
+                    SUM(total_amount) as total_revenue,
+                    SUM(discount_amount) as total_discounts,
+                    SUM(tax_amount) as total_taxes,
+                    AVG(customer_rating) as average_rating
+                FROM service_orders
+                WHERE created_at BETWEEN ? AND ?
+            `, [startDate, endDate]);
+
+            // Ventas por servicio
+            const [salesByService] = await pool.query(`
+                SELECT 
+                    s.name,
+                    COUNT(*) as order_count,
+                    SUM(so.total_amount) as total_revenue,
+                    AVG(so.total_amount) as average_order_value
+                FROM service_orders so
+                JOIN services s ON so.service_id = s.id
+                WHERE so.created_at BETWEEN ? AND ?
+                GROUP BY s.id, s.name
+                ORDER BY total_revenue DESC
+            `, [startDate, endDate]);
+
+            // Métodos de pago
+            const [paymentMethods] = await pool.query(`
+                SELECT 
+                    payment_method,
+                    COUNT(*) as count,
+                    SUM(amount) as total_amount
+                FROM payments
+                WHERE payment_date BETWEEN ? AND ?
+                GROUP BY payment_method
+            `, [startDate, endDate]);
+
+            // Estado de órdenes
+            const [orderStatus] = await pool.query(`
+                SELECT 
+                    status,
+                    COUNT(*) as count
+                FROM service_orders
+                WHERE created_at BETWEEN ? AND ?
+                GROUP BY status
+            `, [startDate, endDate]);
+
+            // Ventas diarias para el gráfico
+            const [dailySales] = await pool.query(`
+                SELECT 
+                    DATE(created_at) as date,
+                    COUNT(*) as order_count,
+                    SUM(total_amount) as daily_revenue
+                FROM service_orders
+                WHERE created_at BETWEEN ? AND ?
+                GROUP BY DATE(created_at)
+                ORDER BY date
+            `, [startDate, endDate]);
+
+            res.render('dashboard/reports', {
+                title: 'Reportes | Electro Servicios Chávez',
+                currentPage: 'reports',
+                user: req.session.user,
+                data: {
+                    salesSummary: salesSummary[0],
+                    salesByService,
+                    paymentMethods,
+                    orderStatus,
+                    dailySales
+                },
+                dateRange: {
+                    startDate,
+                    endDate
+                },
+                stylesheets: ['/css/dashboard.css']
+            });
+        } catch (error) {
+            console.error('Error en reportes:', error);
+            res.status(500).send('Error al generar reportes');
+        }
+    },
+
+    // Exportar reportes en CSV
+    exportReports: async (req, res) => {
+        try {
+            const { startDate, endDate, reportType } = req.query;
+            let data;
+            let filename;
+
+            switch (reportType) {
+                case 'sales':
+                    [data] = await pool.query(`
+                        SELECT 
+                            so.id as order_id,
+                            s.name as service_name,
+                            u.name as client_name,
+                            so.total_amount,
+                            so.status,
+                            DATE_FORMAT(so.created_at, '%Y-%m-%d') as order_date
+                        FROM service_orders so
+                        JOIN services s ON so.service_id = s.id
+                        JOIN users u ON so.user_id = u.id
+                        WHERE so.created_at BETWEEN ? AND ?
+                    `, [startDate, endDate]);
+                    filename = 'ventas.csv';
+                    break;
+
+                case 'payments':
+                    [data] = await pool.query(`
+                        SELECT 
+                            p.id as payment_id,
+                            so.id as order_id,
+                            u.name as client_name,
+                            p.amount,
+                            p.payment_method,
+                            p.status,
+                            DATE_FORMAT(p.payment_date, '%Y-%m-%d') as payment_date
+                        FROM payments p
+                        JOIN service_orders so ON p.service_order_id = so.id
+                        JOIN users u ON so.user_id = u.id
+                        WHERE p.payment_date BETWEEN ? AND ?
+                    `, [startDate, endDate]);
+                    filename = 'pagos.csv';
+                    break;
+            }
+
+            // Convertir data a CSV
+            const csvContent = convertToCSV(data);
+            
+            res.setHeader('Content-Type', 'text/csv');
+            res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+            res.send(csvContent);
+
+        } catch (error) {
+            console.error('Error al exportar reportes:', error);
+            res.status(500).send('Error al exportar reportes');
+        }
+    }
+};
+
+// Función helper para convertir a CSV
+function convertToCSV(data) {
+    if (data.length === 0) return '';
+    
+    const headers = Object.keys(data[0]);
+    const csvRows = [];
+    
+    // Agregar headers
+    csvRows.push(headers.join(','));
+    
+    // Agregar datos
+    for (const row of data) {
+        const values = headers.map(header => {
+            const val = row[header];
+            return `"${val}"`;
+        });
+        csvRows.push(values.join(','));
+    }
+    
+    return csvRows.join('\n');
+}
+
+module.exports = reportsController;

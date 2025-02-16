@@ -1,0 +1,173 @@
+<!-- views/dashboard/sales.ejs -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <%- include('../partials/head', { title: title, stylesheets: stylesheets }) %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <%- include('../partials/dashboard/sidebar-admin') %>
+
+        <main class="dashboard-main">
+            <%- include('../partials/dashboard/header', { title: 'Reporte de Ventas', user: user }) %>
+
+            <div class="dashboard-content">
+                <!-- Resumen del Mes -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Órdenes del Mes</h3>
+                            <div class="stat-number"><%= monthlySummary.total_orders %></div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Ingresos del Mes</h3>
+                            <div class="stat-number">S/. <%= parseFloat(monthlySummary.total_revenue || 0).toFixed(2) %></div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Descuentos</h3>
+                            <div class="stat-number">S/. <%= parseFloat(monthlySummary.total_discounts || 0).toFixed(2) %></div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Calificación Promedio</h3>
+                            <div class="stat-number"><%= parseFloat(monthlySummary.average_rating || 0).toFixed(1) %>/5</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráfico de Ventas -->
+                <div class="content-section chart-section">
+                    <div class="section-header">
+                        <h3 class="section-title">Ventas Mensuales</h3>
+                    </div>
+                    <canvas id="salesChart"></canvas>
+                </div>
+
+                <!-- Métodos de Pago -->
+                <div class="grid-container">
+                    <div class="content-section">
+                        <div class="section-header">
+                            <h3 class="section-title">Métodos de Pago</h3>
+                        </div>
+                        <div class="payment-methods-list">
+                            <% paymentMethods.forEach(method => { %>
+                                <div class="payment-method-item">
+                                    <div class="method-icon">
+                                        <i class="fas fa-<%= method.payment_method === 'cash' ? 'money-bill' : (method.payment_method === 'card' ? 'credit-card' : 'university') %>"></i>
+                                    </div>
+                                    <div class="method-info">
+                                        <h4><%= method.payment_method === 'cash' ? 'Efectivo' : (method.payment_method === 'card' ? 'Tarjeta' : 'Transferencia') %></h4>
+                                        <p>S/. <%= parseFloat(method.total).toFixed(2) %></p>
+                                        <span class="method-count"><%= method.count %> transacciones</span>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+                    </div>
+
+                    <!-- Ventas Recientes -->
+                    <div class="content-section">
+                        <div class="section-header">
+                            <h3 class="section-title">Ventas Recientes</h3>
+                        </div>
+                        <div class="table-container">
+                            <table class="services-table">
+                                <thead>
+                                    <tr>
+                                        <th>Cliente</th>
+                                        <th>Servicio</th>
+                                        <th>Monto</th>
+                                        <th>Estado</th>
+                                        <th>Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% recentSales.forEach(sale => { %>
+                                        <tr>
+                                            <td><%= sale.client_name %></td>
+                                            <td><%= sale.service_name %></td>
+                                            <td>S/. <%= parseFloat(sale.total_amount).toFixed(2) %></td>
+                                            <td>
+                                                <span class="status <%= sale.status %>">
+                                                    <%= sale.status === 'completed' ? 'Completado' : 
+                                                       (sale.status === 'pending' ? 'Pendiente' : 
+                                                       (sale.status === 'in_progress' ? 'En Progreso' : 'Cancelado')) %>
+                                                </span>
+                                            </td>
+                                            <td><%= new Date(sale.created_at).toLocaleDateString('es-PE') %></td>
+                                        </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <%- include('../partials/dashboard/scripts') %>
+    <script>
+        // Inicializar gráfico de ventas
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        const monthlyData = <%- JSON.stringify(monthlyData) %>;
+        
+        const salesChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: monthlyData.map(data => {
+                    const [year, month] = data.month.split('-');
+                    return new Date(year, month - 1).toLocaleDateString('es-PE', { month: 'short', year: 'numeric' });
+                }),
+                datasets: [{
+                    label: 'Ingresos Mensuales',
+                    data: monthlyData.map(data => data.total_revenue),
+                    borderColor: '#2563eb',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'S/. ' + value.toLocaleString('es-PE');
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

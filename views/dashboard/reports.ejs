@@ -1,0 +1,195 @@
+<!-- views/dashboard/reports.ejs -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <%- include('../partials/head', { title: title, stylesheets: stylesheets }) %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <%- include('../partials/dashboard/sidebar-admin') %>
+
+        <main class="dashboard-main">
+            <%- include('../partials/dashboard/header', { title: 'Reportes', user: user }) %>
+
+            <div class="dashboard-content">
+                <!-- Filtros de fecha -->
+                <div class="content-section">
+                    <form id="dateFilterForm" class="filters-form">
+                        <div class="form-group">
+                            <label for="startDate">Fecha Inicio:</label>
+                            <input type="date" id="startDate" name="startDate" value="<%= dateRange.startDate %>" class="input-field">
+                        </div>
+                        <div class="form-group">
+                            <label for="endDate">Fecha Fin:</label>
+                            <input type="date" id="endDate" name="endDate" value="<%= dateRange.endDate %>" class="input-field">
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter"></i> Filtrar
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Resumen de Ventas -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Órdenes</h3>
+                            <div class="stat-number"><%= data.salesSummary.total_orders %></div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Ingresos Totales</h3>
+                            <div class="stat-number">S/. <%= parseFloat(data.salesSummary.total_revenue).toFixed(2) %></div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Descuentos</h3>
+                            <div class="stat-number">S/. <%= parseFloat(data.salesSummary.total_discounts).toFixed(2) %></div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Calificación Promedio</h3>
+                            <div class="stat-number"><%= parseFloat(data.salesSummary.average_rating).toFixed(1) %>/5</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráfico de Ventas -->
+                <div class="content-section chart-section">
+                    <div class="section-header">
+                        <h3 class="section-title">Ventas Diarias</h3>
+                        <div class="section-actions">
+                            <button class="btn-export" onclick="exportReport('sales')">
+                                <i class="fas fa-download"></i> Exportar Ventas
+                            </button>
+                        </div>
+                    </div>
+                    <canvas id="salesChart"></canvas>
+                </div>
+
+                <div class="grid-container">
+                    <!-- Ventas por Servicio -->
+                    <div class="content-section">
+                        <h3 class="section-title">Ventas por Servicio</h3>
+                        <div class="table-container">
+                            <table class="services-table">
+                                <thead>
+                                    <tr>
+                                        <th>Servicio</th>
+                                        <th>Órdenes</th>
+                                        <th>Ingresos</th>
+                                        <th>Promedio</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% data.salesByService.forEach(service => { %>
+                                    <tr>
+                                        <td><%= service.name %></td>
+                                        <td><%= service.order_count %></td>
+                                        <td>S/. <%= parseFloat(service.total_revenue).toFixed(2) %></td>
+                                        <td>S/. <%= parseFloat(service.average_order_value).toFixed(2) %></td>
+                                    </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Métodos de Pago -->
+                    <div class="content-section">
+                        <div class="section-header">
+                            <h3 class="section-title">Métodos de Pago</h3>
+                            <button class="btn-export" onclick="exportReport('payments')">
+                                <i class="fas fa-download"></i> Exportar Pagos
+                            </button>
+                        </div>
+                        <div class="table-container">
+                            <table class="services-table">
+                                <thead>
+                                    <tr>
+                                        <th>Método</th>
+                                        <th>Cantidad</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% data.paymentMethods.forEach(method => { %>
+                                    <tr>
+                                        <td><%= method.payment_method.toUpperCase() %></td>
+                                        <td><%= method.count %></td>
+                                        <td>S/. <%= parseFloat(method.total_amount).toFixed(2) %></td>
+                                    </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <%- include('../partials/dashboard/scripts') %>
+    <script>
+        // Inicializar gráfico de ventas
+        const salesData = <%- JSON.stringify(data.dailySales) %>;
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: salesData.map(item => item.date),
+                datasets: [{
+                    label: 'Ventas Diarias',
+                    data: salesData.map(item => item.daily_revenue),
+                    borderColor: '#2563eb',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                }
+            }
+        });
+
+        // Función para exportar reportes
+        function exportReport(reportType) {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            window.location.href = `/dashboard/reports/export?reportType=${reportType}&startDate=${startDate}&endDate=${endDate}`;
+        }
+
+        // Evento para el formulario de filtros
+        document.getElementById('dateFilterForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            window.location.href = `/dashboard/reports?startDate=${startDate}&endDate=${endDate}`;
+        });
+    </script>
+</body>
+</html>

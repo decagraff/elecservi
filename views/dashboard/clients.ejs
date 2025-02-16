@@ -1,0 +1,182 @@
+<!-- views/dashboard/clients.ejs -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <%- include('../partials/head', { title: title, stylesheets: stylesheets }) %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <%- include('../partials/dashboard/sidebar-admin') %>
+
+        <main class="dashboard-main">
+            <%- include('../partials/dashboard/header', { title: 'Gestión de Clientes', user: user }) %>
+
+            <div class="dashboard-content">
+                <!-- Stats Overview Section -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Clientes</h3>
+                            <div class="stat-number"><%= clientStats.total_clients %></div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Clientes Nuevos</h3>
+                            <div class="stat-number"><%= clientStats.new_clients %></div>
+                            <span class="stat-change neutral">Últimos 30 días</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Clientes Activos</h3>
+                            <div class="stat-number"><%= clientStats.active_clients %></div>
+                            <span class="stat-change positive">Con órdenes de servicio</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Client List Section -->
+                <div class="content-section">
+                    <div class="section-header">
+                        <h3 class="section-title">Lista de Clientes</h3>
+                        <div class="section-actions">
+                            <button class="btn-filter">
+                                <i class="fas fa-filter"></i> Filtrar
+                            </button>
+                            <button class="btn-export">
+                                <i class="fas fa-download"></i> Exportar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="services-table">
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Contacto</th>
+                                    <th>Dirección</th>
+                                    <th>Fecha Registro</th>
+                                    <th>Órdenes</th>
+                                    <th>Total Gastado</th>
+                                    <th>Última Orden</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% clients.forEach(client => { %>
+                                <tr>
+                                    <td><%= client.name %></td>
+                                    <td>
+                                        <div><%= client.email %></div>
+                                        <div><%= client.phone || 'No registrado' %></div>
+                                    </td>
+                                    <td><%= client.address || 'No registrada' %></td>
+                                    <td><%= client.created_at %></td>
+                                    <td><%= client.total_orders %></td>
+                                    <td>S/. <%= client.total_spent %></td>
+                                    <td><%= client.last_order_date %></td>
+                                    <td class="action-buttons">
+                                        <button class="btn btn-primary" onclick="viewClientDetails(<%= client.id %>)">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-warning" onclick="editClient(<%= client.id %>)">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Recent Orders Section -->
+                <div class="content-section">
+                    <div class="section-header">
+                        <h3 class="section-title">Órdenes Recientes</h3>
+                        <a href="/dashboard/orders" class="btn-link">Ver todas</a>
+                    </div>
+                    <div class="activity-list">
+                        <% recentOrders.forEach(order => { %>
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <div class="activity-details">
+                                <h4><%= order.client_name %> - <%= order.service_name %></h4>
+                                <p class="activity-time"><%= order.created_at %></p>
+                                <p class="activity-status"><%= order.status %></p>
+                                <p class="activity-amount">S/. <%= order.total_amount %></p>
+                            </div>
+                        </div>
+                        <% }); %>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal para detalles del cliente -->
+    <div id="clientModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Detalles del Cliente</h2>
+                <span class="modal-close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <!-- El contenido se llenará dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <%- include('../partials/dashboard/scripts') %>
+    <script>
+        // Funciones para manejar las acciones de los clientes
+        function viewClientDetails(clientId) {
+            fetch(`/api/clients/${clientId}`)
+                .then(response => response.json())
+                .then(client => {
+                    const modal = document.getElementById('clientModal');
+                    const modalBody = modal.querySelector('.modal-body');
+                    modalBody.innerHTML = `
+                        <div class="client-details">
+                            <h3>${client.name}</h3>
+                            <p><strong>Email:</strong> ${client.email}</p>
+                            <p><strong>Teléfono:</strong> ${client.phone || 'No registrado'}</p>
+                            <p><strong>Dirección:</strong> ${client.address || 'No registrada'}</p>
+                            <p><strong>Total Órdenes:</strong> ${client.total_orders}</p>
+                            <p><strong>Total Gastado:</strong> S/. ${parseFloat(client.total_spent || 0).toFixed(2)}</p>
+                            <p><strong>Última Orden:</strong> ${client.last_order_date ? new Date(client.last_order_date).toLocaleDateString() : 'Sin órdenes'}</p>
+                        </div>
+                    `;
+                    modal.classList.add('show');
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function editClient(clientId) {
+            // Implementar lógica de edición
+            console.log('Editar cliente:', clientId);
+        }
+
+        // Cerrar modal
+        document.querySelector('.modal-close').addEventListener('click', () => {
+            document.getElementById('clientModal').classList.remove('show');
+        });
+    </script>
+</body>
+</html>

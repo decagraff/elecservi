@@ -1,0 +1,78 @@
+// aservices.ejs (Vista de Administración de Servicios)
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <%- include('../partials/head', { title: 'Administrar Servicios', stylesheets: stylesheets }) %>
+</head>
+<body>
+    <div class="dashboard-container">
+        <%- include('../partials/dashboard/sidebar-admin') %>
+        
+        <main class="dashboard-main">
+            <%- include('../partials/dashboard/header', { title: 'Administrar Servicios', user: user }) %>
+            
+            <div class="dashboard-content">
+                <div class="section-header">
+                    <h3 class="section-title">Servicios Disponibles</h3>
+                    <a href="/dashboard/aservices/new" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Agregar Servicio
+                    </a>
+                </div>
+                <div class="table-container">
+                    <table class="services-table">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Descripción</th>
+                                <th>Precio Base</th>
+                                <th>Órdenes Totales</th>
+                                <th>Completadas</th>
+                                <th>En Progreso</th>
+                                <th>Ingresos Totales</th>
+                                <th>Calificación</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% services.forEach(service => { %>
+                            <tr>
+                                <td><%= service.name %></td>
+                                <td><%= service.description %></td>
+                                <td>S/. <%= service.base_price %></td>
+                                <td><%= service.total_orders || 0 %></td>
+                                <td><span class="status completed"><%= service.completed_orders || 0 %></span></td>
+                                <td><span class="status in-progress"><%= service.in_progress_orders || 0 %></span></td>
+                                <td>S/. <%= service.total_revenue %></td>
+                                <td>
+                                    <div class="rating">
+                                        <%= service.average_rating %>
+                                        <i class="fas fa-star" style="color: #ffd700;"></i>
+                                    </div>
+                                </td>
+                                <td class="action-buttons">
+                                    <a href="/dashboard/aservices/edit/<%= service.id %>" class="btn btn-primary"><i class="fas fa-edit"></i></a>
+                                    <button class="btn btn-danger" onclick="deleteService(<%= service.id %>)"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        function deleteService(id) {
+            if (confirm('¿Estás seguro de eliminar este servicio?')) {
+                fetch(`/dashboard/aservices/delete/${id}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) location.reload();
+                        else alert('Error al eliminar el servicio.');
+                    });
+            }
+        }
+    </script>
+</body>
+</html>

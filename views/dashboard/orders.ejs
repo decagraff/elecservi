@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <%- include('../partials/head', { title: title }) %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <%- include('../partials/dashboard/sidebar-user') %>
+
+        <main class="dashboard-main">
+            <!-- Header -->
+            <%- include('../partials/dashboard/header', { title: 'Mis Pedidos', user: user }) %>
+
+            <div class="dashboard-content">
+                <!-- Estadísticas de Pedidos -->
+                <div class="content-section">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Total de Pedidos</h3>
+                                <div class="stat-number"><%= stats.totalOrders %></div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Pedidos Activos</h3>
+                                <div class="stat-number"><%= stats.activeOrders %></div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Pedidos Completados</h3>
+                                <div class="stat-number"><%= stats.completedOrders %></div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Total Gastado</h3>
+                                <div class="stat-number">S/ <%= stats.totalSpent %></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pedidos Activos -->
+                <div class="content-section">
+                    <h3 class="section-title">Pedidos Activos</h3>
+                    <div class="orders-grid">
+                        <% if (activeOrders && activeOrders.length > 0) { %>
+                            <% activeOrders.forEach(function(order) { %>
+                                <div class="order-card">
+                                    <div class="order-header">
+                                        <h4><%= order.service_name %></h4>
+                                        <span class="order-status <%= order.status %>">
+                                            <%= order.status === 'pending' ? 'Pendiente' : 'En Progreso' %>
+                                        </span>
+                                    </div>
+                                    <div class="order-content">
+                                        <p class="order-description"><%= order.description %></p>
+                                        <div class="progress-container">
+                                            <div class="progress-bar">
+                                                <div class="progress" style="width: <%= order.progress_percentage %>%"></div>
+                                            </div>
+                                            <span class="progress-text"><%= order.progress_percentage %>%</span>
+                                        </div>
+                                        <div class="order-details">
+                                            <p><i class="fas fa-calendar"></i> <%= order.order_date %></p>
+                                            <p><i class="fas fa-money-bill-wave"></i> S/ <%= order.total_amount %></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <p class="no-orders">No tienes pedidos activos en este momento.</p>
+                        <% } %>
+                    </div>
+                </div>
+
+                <!-- Historial de Pedidos -->
+                <div class="content-section">
+                    <h3 class="section-title">Historial de Pedidos</h3>
+                    <div class="orders-history">
+                        <% if (orderHistory && orderHistory.length > 0) { %>
+                            <% orderHistory.forEach(function(order) { %>
+                                <div class="history-card">
+                                    <div class="history-header">
+                                        <h4><%= order.service_name %></h4>
+                                        <span class="order-status <%= order.status %>">
+                                            <%= order.status === 'completed' ? 'Completado' : 'Cancelado' %>
+                                        </span>
+                                    </div>
+                                    <div class="history-content">
+                                        <p class="history-description"><%= order.description %></p>
+                                        <div class="history-details">
+                                            <p><i class="fas fa-calendar"></i> <%= order.order_date %></p>
+                                            <p><i class="fas fa-money-bill-wave"></i> S/ <%= order.total_amount %></p>
+                                        </div>
+                                        <% if (order.history_notes) { %>
+                                            <div class="history-notes">
+                                                <p><i class="fas fa-clipboard-list"></i> Notas:</p>
+                                                <ul>
+                                                    <% order.history_notes.split(',').forEach(function(note) { %>
+                                                        <li><%= note %></li>
+                                                    <% }); %>
+                                                </ul>
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <p class="no-orders">No hay historial de pedidos disponible.</p>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <%- include('../partials/dashboard/scripts') %>
+</body>
+</html>

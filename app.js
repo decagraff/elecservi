@@ -6,7 +6,7 @@ const session = require('express-session');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const path = require('path');
-
+const chatbotRoutes = require('./routes/chatbot');
 dotenv.config();
 
 const app = express();
@@ -20,7 +20,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
-
+app.use('/chatbot', chatbotRoutes);
 // Configuración de sesión
 app.use(session({
     secret: process.env.SESSION_SECRET || 'tu_secreto_aqui',

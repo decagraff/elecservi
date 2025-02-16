@@ -15,7 +15,10 @@
                 </a>
             </li>
             <li class="<%= currentPage === 'orders' ? 'active' : '' %>">
-                <a href="/dashboard/orders"><i class="fas fa-clipboard-list"></i> <span>Mis Pedidos</span></a>
+                <a href="/dashboard/orders" class="<%= currentPage === 'orders' ? 'active' : '' %>">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Mis Pedidos</span>
+                </a>
             </li>
             <li class="<%= currentPage === 'services' ? 'active' : '' %>">
                 <a href="/services">
