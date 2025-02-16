@@ -1,0 +1,184 @@
+CREATE DATABASE electroservicios_db;
+USE electroservicios_db;
+
+-- Tabla de usuarios
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    phone VARCHAR(20),  -- Se agrega el teléfono aquí
+    role ENUM('admin', 'user') DEFAULT 'user',
+    address VARCHAR(255), -- Dirección de los usuarios (opcional)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabla de servicios actualizada
+CREATE TABLE services (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    base_price DECIMAL(10, 2),
+    image_url VARCHAR(255),  -- Nueva columna para la imagen
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabla de órdenes de servicio, que ahora se relacionará con users (clientes)
+CREATE TABLE service_orders (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,  -- Relacionado con users en lugar de clients
+    service_id INT NOT NULL,
+    status ENUM('pending', 'in_progress', 'completed', 'cancelled') DEFAULT 'pending',
+    total_amount DECIMAL(10, 2) NOT NULL,
+    progress_percentage INT DEFAULT 0,
+    start_date DATE,
+    completion_date DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),  -- Relación con la tabla users
+    FOREIGN KEY (service_id) REFERENCES services(id)
+);
+ALTER TABLE service_orders
+ADD COLUMN description TEXT AFTER total_amount;
+-- Agregar campos para mejor análisis de ventas
+ALTER TABLE service_orders
+ADD COLUMN discount_amount DECIMAL(10, 2) DEFAULT 0.00,
+ADD COLUMN tax_amount DECIMAL(10, 2) DEFAULT 0.00,
+ADD COLUMN notes TEXT,
+ADD COLUMN customer_rating INT;
+
+-- Agregar índices para mejor rendimiento
+CREATE INDEX idx_service_orders_created_at ON service_orders(created_at);
+CREATE INDEX idx_service_orders_status ON service_orders(status);
+CREATE INDEX idx_payments_payment_date ON payments(payment_date);
+
+select * from service_orders;
+
+-- Tabla de pagos
+CREATE TABLE payments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    service_order_id INT NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    payment_date DATE NOT NULL,
+    payment_method ENUM('cash', 'transfer', 'card') NOT NULL,
+    status ENUM('pending', 'completed', 'cancelled') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (service_order_id) REFERENCES service_orders(id)
+);
+
+-- Tabla de historial de cambios de servicio
+CREATE TABLE service_history (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    service_order_id INT NOT NULL,
+    status_change ENUM('pending', 'in_progress', 'completed', 'cancelled') NOT NULL,
+    notes TEXT,
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (service_order_id) REFERENCES service_orders(id)
+);
+
+-- Crear la tabla faq si no está creada
+CREATE TABLE faq (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    question TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+-- Inserción de usuarios (incluyendo el admin y el cliente)
+-- 
+-- NO AGREGAR INFORMACION SI NO HAY USARIOS REGISTRADOS
+
+-- Inserción de servicios
+INSERT INTO services (name, description, base_price, image_url)
+VALUES
+    ('Reparación de electrodomésticos', 'Reparación de todo tipo de electrodomésticos, incluyendo refrigeradores, lavadoras, etc.', 150.00, '/images/repair.jpg'),
+    ('Instalación de aire acondicionado', 'Instalación de aire acondicionado de cualquier marca y tamaño.', 200.00, '/images/ac_installation.jpg'),
+    ('Mantenimiento de computadoras', 'Mantenimiento preventivo y correctivo para computadoras de escritorio y portátiles.', 80.00, '/images/computer_maintenance.jpg'),
+    ('Instalación eléctrica', 'Instalación y reparación de sistemas eléctricos para hogares y oficinas.', 250.00, '/images/electrical_installation.jpg'),
+    ('Plomería', 'Servicios de plomería, incluyendo reparaciones y mantenimiento de sistemas de agua.', 120.00, '/images/plumbing.jpg');
+
+-- Inserción de órdenes de servicio (asegúrate de que los user_id existan)
+INSERT INTO service_orders (user_id, service_id, status, total_amount, progress_percentage, start_date, completion_date, description)
+VALUES
+    (2, 1, 'pending', 150.00, 0, '2025-02-01', NULL, 'Orden de reparación de electrodoméstico'),
+    (2, 2, 'in_progress', 200.00, 50, '2025-02-02', NULL, 'Instalación de aire acondicionado en proceso'),
+    (3, 3, 'completed', 80.00, 100, '2025-01-30', '2025-02-01', 'Mantenimiento de computadora completado'),
+    (3, 4, 'pending', 250.00, 0, '2025-02-03', NULL, 'Esperando confirmación para comenzar instalación eléctrica'),
+    (3, 5, 'cancelled', 120.00, 0, '2025-02-04', NULL, 'La orden fue cancelada por el cliente debido a cambios de necesidades');
+
+-- Inserción de pagos
+INSERT INTO payments (service_order_id, amount, payment_date, payment_method, status)
+VALUES
+    (1, 150.00, '2025-02-01', 'cash', 'pending'),
+    (2, 200.00, '2025-02-02', 'transfer', 'completed'),
+    (3, 80.00, '2025-01-30', 'card', 'completed'),
+    (4, 250.00, '2025-02-03', 'cash', 'pending'),
+    (5, 120.00, '2025-02-04', 'transfer', 'cancelled');
+
+-- Inserción de historial de cambios de servicio
+INSERT INTO service_history (service_order_id, status_change, notes)
+VALUES
+    (1, 'pending', 'La orden está pendiente de ser asignada a un técnico.'),
+    (2, 'in_progress', 'El técnico ha comenzado con la instalación del aire acondicionado.'),
+    (3, 'completed', 'El mantenimiento de la computadora se completó satisfactoriamente.'),
+    (4, 'pending', 'Esperando confirmación para comenzar la instalación eléctrica.'),
+    (5, 'cancelled', 'La orden fue cancelada por el cliente debido a cambios de necesidades.');
+    
+    -- Inserta algunas preguntas frecuentes
+INSERT INTO faq (question, answer) VALUES
+('Hola', 'Hola! En qué puedo ayudarte'),
+('¿Cómo puedo registrarme?', 'Puedes registrarte haciendo clic en el botón "Registrarse" en la página de inicio.'),
+('¿Qué servicios ofrecen?', 'Ofrecemos instalaciones eléctricas, mantenimiento y soluciones de energía renovable.'),
+('¿Cómo contacto al soporte?', 'Puedes contactarnos a través del formulario de contacto o llamando al +51 987 654 321.'),
+('¿Cuáles son los horarios de atención?', 'Nuestro horario de atención es de lunes a viernes de 8:00 AM a 6:00 PM.'),
+('¿Ofrecen servicios de emergencia?', 'Sí, ofrecemos servicios de emergencia las 24 horas.'),
+('¿Cómo solicito un presupuesto?', 'Puedes solicitar un presupuesto a través de nuestro formulario de contacto.'),
+('¿Trabajan con paneles solares?', 'Sí, ofrecemos instalación y mantenimiento de paneles solares.'),
+('¿Qué métodos de pago aceptan?', 'Aceptamos tarjetas de crédito, débito y transferencias bancarias.'),
+('¿Ofrecen garantía en sus servicios?', 'Sí, ofrecemos garantía de 1 año en todos nuestros servicios.'),
+('¿Cómo puedo cancelar un servicio?', 'Puedes cancelar un servicio contactando a nuestro soporte.'),
+('¿Tienen servicio a domicilio?', 'Sí, ofrecemos servicio a domicilio en toda la ciudad.'),
+('¿Qué debo hacer si hay un corte de energía?', 'Contacta a nuestro soporte de emergencia para asistencia inmediata.'),
+('¿Cómo puedo ser proveedor de la empresa?', 'Envía tu propuesta a proveedores@electrochavez.com.'),
+('¿Ofrecen capacitaciones?', 'Sí, ofrecemos capacitaciones en seguridad eléctrica.'),
+('¿Qué certificaciones tienen?', 'Contamos con certificaciones ISO 9001 y OSHA.'),
+('¿Cómo puedo reportar un problema?', 'Puedes reportar un problema a través de nuestro formulario de contacto.'),
+('¿Tienen servicio para empresas?', 'Sí, ofrecemos soluciones eléctricas para empresas.'),
+('¿Cómo puedo verificar el estado de mi servicio?', 'Puedes verificar el estado de tu servicio en tu panel de usuario.'),
+('¿Qué debo hacer si mi factura tiene un error?', 'Contacta a nuestro departamento de facturación.'),
+('¿Ofrecen descuentos?', 'Sí, ofrecemos descuentos para clientes frecuentes.'),
+('¿Cómo puedo cambiar mi contraseña?', 'Puedes cambiar tu contraseña en la sección de perfil de usuario.'),
+('¿Qué debo hacer si olvidé mi contraseña?', 'Haz clic en "¿Olvidaste tu contraseña?" en la página de inicio de sesión.'),
+('¿Cómo puedo actualizar mi información de contacto?', 'Puedes actualizar tu información en la sección de perfil de usuario.'),
+('¿Tienen aplicación móvil?', 'Actualmente no tenemos una aplicación móvil, pero estamos trabajando en ello.'),
+('¿Cómo puedo dejar una reseña?', 'Puedes dejar una reseña en nuestra página de Google o en el panel de usuario.'),
+('¿Qué debo hacer si no estoy satisfecho con el servicio?', 'Contacta a nuestro soporte para resolver cualquier inconveniente.'),
+('¿Ofrecen servicios de auditoría eléctrica?', 'Sí, ofrecemos servicios de auditoría eléctrica para empresas.'),
+('¿Cómo puedo obtener un certificado de instalación?', 'Puedes solicitar un certificado a través de nuestro soporte.'),
+('¿Qué debo hacer si mi equipo eléctrico se daña?', 'Contacta a nuestro soporte para asistencia técnica.'),
+('¿Tienen servicio de instalación de cámaras de seguridad?', 'Sí, ofrecemos instalación de cámaras de seguridad.'),
+('¿Cómo puedo obtener un descuento por referido?', 'Comparte tu código de referido con amigos y familiares.'),
+('¿Qué debo hacer si mi factura no llega?', 'Contacta a nuestro departamento de facturación para solicitar una copia.'),
+('¿Cómo puedo solicitar una factura electrónica?', 'Puedes solicitar una factura electrónica en tu panel de usuario.'),
+('¿Tienen servicio de instalación de sistemas de iluminación?', 'Sí, ofrecemos instalación de sistemas de iluminación.'),
+('¿Cómo puedo obtener un manual de usuario?', 'Puedes descargar los manuales desde nuestra página de soporte.'),
+('¿Qué debo hacer si mi equipo eléctrico hace ruido?', 'Contacta a nuestro soporte para una revisión técnica.'),
+('¿Tienen servicio de instalación de generadores eléctricos?', 'Sí, ofrecemos instalación de generadores eléctricos.'),
+('¿Cómo puedo obtener un informe de consumo eléctrico?', 'Puedes solicitar un informe en tu panel de usuario.'),
+('¿Qué debo hacer si mi equipo eléctrico se sobrecalienta?', 'Apaga el equipo y contacta a nuestro soporte de emergencia.'),
+('¿Tienen servicio de instalación de sistemas de energía solar?', 'Sí, ofrecemos instalación de sistemas de energía solar.'),
+('¿Cómo puedo obtener un certificado de eficiencia energética?', 'Puedes solicitar un certificado a través de nuestro soporte.'),
+('¿Qué debo hacer si mi equipo eléctrico no enciende?', 'Verifica el suministro eléctrico y contacta a nuestro soporte.'),
+('¿Tienen servicio de instalación de sistemas de climatización?', 'Sí, ofrecemos instalación de sistemas de climatización.'),
+('¿Cómo puedo obtener un informe de mantenimiento?', 'Puedes solicitar un informe en tu panel de usuario.'),
+('¿Qué debo hacer si mi equipo eléctrico emite chispas?', 'Apaga el equipo y contacta a nuestro soporte de emergencia.'),
+('¿Tienen servicio de instalación de sistemas de seguridad eléctrica?', 'Sí, ofrecemos instalación de sistemas de seguridad eléctrica.'),
+('¿Cómo puedo obtener un certificado de seguridad eléctrica?', 'Puedes solicitar un certificado a través de nuestro soporte.'),
+('¿Qué debo hacer si mi equipo eléctrico se apaga solo?', 'Contacta a nuestro soporte para una revisión técnica.'),
+('¿Tienen servicio de instalación de sistemas de energía eólica?', 'Sí, ofrecemos instalación de sistemas de energía eólica.');
+
+
+-- Verificación de las tablas
+SELECT * FROM users;
+SELECT * FROM services;
+SELECT * FROM service_orders;
