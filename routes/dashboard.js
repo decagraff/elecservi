@@ -11,7 +11,7 @@ const clientController = require('../controllers/clientController');
 const salesController = require('../controllers/salesController');
 const reportsController = require('../controllers/reportsController');
 const asservicesController = require('../controllers/asservicesController');
-
+const settingsController = require('../controllers/settingsController');
 
 // Middleware de autenticación específico para el dashboard
 const dashboardAuth = (req, res, next) => {
@@ -30,6 +30,17 @@ const adminAuth = (req, res, next) => {
 };
 
 router.use(dashboardAuth);
+
+router.get('/settings', (req, res) => {
+    res.render('dashboard/settings', { 
+        title: 'Configuración', 
+        user: req.session.user, 
+        stylesheets: ['/css/dashboard.css'], 
+        currentPage: 'settings'  // Agregar esta línea
+    });
+});
+router.post('/settings/update', settingsController.updateSettings);
+
 
 // Rutas de aservice
 router.get('/asservices', asservicesController.showServicesPage);
